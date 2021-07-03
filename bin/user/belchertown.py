@@ -3363,6 +3363,8 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                     "Error was: %s." % (binding, obs_lookup, e)
                 )
 
+            self.insert_null_value_timestamps_to_end_ts(time_start_vt, time_stop_vt, obs_vt, start_ts, end_ts, aggregate_interval)
+            
             min_obs_vt = self.converter.convert(obs_vt)
 
             # Get max values
@@ -3380,6 +3382,8 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                     "Error was: %s." % (binding, obs_lookup, e)
                 )
 
+            self.insert_null_value_timestamps_to_end_ts(time_start_vt, time_stop_vt, obs_vt, start_ts, end_ts, aggregate_interval)
+            
             max_obs_vt = self.converter.convert(obs_vt)
 
             obs_unit = max_obs_vt[1]
@@ -3596,6 +3600,8 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                 % (binding, obs_lookup, e)
             )
 
+        self.insert_null_value_timestamps_to_end_ts(time_start_vt, time_stop_vt, obs_vt, start_ts, end_ts, aggregate_interval)
+        
         obs_vt = self.converter.convert(obs_vt)
 
         # Special handling for the rain.
@@ -3656,6 +3662,29 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
         data = zip(time_ms, obs_round_vt)
 
         return data
+
+    def insert_null_value_timestamps_to_end_ts(self, time_start_vt, time_stop_vt, obs_vt, start_ts, end_ts, interval):
+        """
+        In weewx 4.5.1 xtypes.py was modified to not return any data points which didn't exist in the archive database.
+        This function adds the 'future' data points from the last timestamp in the list up until end_ts with None entries.
+        This means that graphs still have the option of showing a full day or month or year on the x axis depending on the time_length specfied.       
+        """
+        count = 0
+
+        if interval is not None:
+            try:
+                ts = time_start_vt[0][-1] + interval
+            except:
+                ts = start_ts
+
+            while ts < end_ts:
+                time_start_vt[0].append(ts)
+                time_stop_vt[0].append(ts)
+                ts = ts + interval
+                count = count + 1
+
+        for i in range(count):
+           obs_vt[0].append(None)
 
     def round_none(self, value, places):
         """Round value to 'places' places but also permit a value of None"""
