@@ -46,7 +46,7 @@ extension_config = """
     [[Belchertown]]
         skin = Belchertown
         HTML_ROOT = belchertown
-        enable = true 
+        enable = true
 
         [[[Extras]]]
 
@@ -146,7 +146,7 @@ extension_config = """
            #--- python's ConfigObj has a limitation in how it processes
            #--- comments, so we need to define an 'unused' variable below
            #--- to ensure that this whole stanza makes it into weewx.conf
-           #--- 
+           #---
            #--- please ignore the following 'unused' variable
            #---
            #-------------------------------------------------------------
@@ -225,7 +225,6 @@ files=[('bin/user', ['bin/user/belchertown.py'
                                      'skins/Belchertown/images/tornado.png',
                                      'skins/Belchertown/images/unknown.png',
                                      'skins/Belchertown/images/wind.png',
-                                     'skins/Belchertown/images/windy.png',
                                      'skins/Belchertown/images/index.html'
                                     ]
         )
