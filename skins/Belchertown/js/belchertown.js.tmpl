@@ -472,7 +472,7 @@ function highcharts_tooltip_factory(obsvalue, point_obsType, highchartsReturn = 
     return output;
 }
 
-// Handle wind arrow rotation with the ability to "rollover" past 0 
+// Handle wind arrow rotation with the ability to "rollover" past 0
 // without spinning back around. e.g 350 to 3 would normally spin back around
 // https://stackoverflow.com/a/19872672/1177153
 function rotateThis(newRotation) {
@@ -497,7 +497,7 @@ function titleCase(str) {
 }
 
 function autoTheme(sunset_hour, sunset_min, sunrise_hour, sunrise_min) {
-    // First check if ?theme= is in URL. If so, bail out and do not change anything. 
+    // First check if ?theme= is in URL. If so, bail out and do not change anything.
     if (getURLvar("theme") && getURLvar("theme") != "auto") {
         belchertown_debug("Auto theme: theme override detected in URL. Skipping auto theme");
         return true;
@@ -606,7 +606,7 @@ var weewx_data = "";
 function update_weewx_data(data) {
     belchertown_debug("Updating weewx data");
     weewx_data = data;
-    
+
     #if $Extras.has_key("theme") and $Extras.theme == 'auto'
     // Auto theme if enabled
     autoTheme(data["almanac"]["sunset_hour"], data["almanac"]["sunset_minute"], data["almanac"]["sunrise_hour"], data["almanac"]["sunrise_minute"]);
@@ -652,12 +652,12 @@ function update_weewx_data(data) {
     jQuery(".monthstatsrain").html(data["month"]["rain"]["sum"]);
     jQuery(".monthstatsrainrate").html(data["month"]["rain"]["max"]);
 
-    // Sunrise and Sunset            
+    // Sunrise and Sunset
     jQuery(".sunrise-value").html(tzAdjustedMoment(parseFloat(data["almanac"]["sunrise_epoch"]).toFixed(0)).format("$obs.label.time_sunrise"));
     jQuery(".sunset-value").html(tzAdjustedMoment(parseFloat(data["almanac"]["sunset_epoch"]).toFixed(0)).format("$obs.label.time_sunset"));
 
     // Moon icon, phase and illumination percent
-    jQuery(".moon-icon").html(moon_icon(data["almanac"]["moon"]["moon_index"]));        
+    jQuery(".moon-icon").html(moon_icon(data["almanac"]["moon"]["moon_index"]));
     jQuery(".moon-phase").html(titleCase(data["almanac"]["moon"]["moon_phase"])); // Javascript function above
     jQuery(".moon-visible").html("<strong>" + data["almanac"]["moon"]["moon_fullness"] + "%</strong> $obs.label.moon_visible");
     #if $almanac.hasExtras
@@ -671,7 +671,7 @@ function update_weewx_data(data) {
 
 //  function returns html for moon-icon according to moonphase value and currentTheme setting
 function moon_icon(moonphase){
-    
+
     var moon_icon_dict = {
         "0": "<div class='wi wi-moon-new'></div>",
         "1": "<div class='wi wi-moon-waxing-crescent-3 $hemisphere'></div>",
@@ -682,7 +682,7 @@ function moon_icon(moonphase){
         "6": "<div class='wi wi-moon-third-quarter $hemisphere'></div>",
         "7": "<div class='wi wi-moon-waning-crescent-4 $hemisphere'></div>",
     }
-    
+
     var output = moon_icon_dict[moonphase];
     if (sessionStorage.getItem('currentTheme') === 'dark') {
         return output;
@@ -1016,11 +1016,11 @@ function aeris_coded_alerts(data, full_observation = false) {
 function aeris_icon(data) {
     // https://www.aerisweather.com/support/docs/api/reference/icon-list/
     var icon_name = data.split(".")[0]; // Remove .png
-        icon_out = icon_dict[icon_name];
-        if ( icon_out === undefined ) {
-            icon_out ='unknown' 
-            }
-        return icon_out;
+    icon_out = icon_dict[icon_name];
+    if ( icon_out === undefined ) {
+        icon_out ='unknown'
+    }
+    return icon_out;
 }
 
 function show_forcast_alert(data, forecast_provider) {
@@ -1116,10 +1116,10 @@ function update_forecast_data(data) {
         var forecast_subtitle = tzAdjustedMoment(data["timestamp"]).format('$obs.label.time_forecast_last_updated');
 
         var wxicon = get_relative_url() + "/images/" + aeris_icon(data["current"][0]["response"]["ob"]["icon"]) + ".png";
-        
+
         // Current observation text
         jQuery(".current-obs-text").html(aeris_coded_weather(data["current"][0]["response"]["ob"]["weatherPrimaryCoded"], true));
-        
+
         // AQI
         if (data["aqi"][0]["success"] && !data["aqi"][0]["error"]) {
             jQuery(".wx-aqi").html(data["aqi"][0]["response"][0]["periods"][0]["aqi"]);
@@ -1289,7 +1289,7 @@ function update_forecast_data(data) {
                     output_html += '<br>';
                     output_html += '<div class="forecast-conditions">';
                     output_html += '<div class="forecast-temp-graph" style="padding-top:';
-                    //  padding = ( ( highTemp - forecast_row[i]["avgTemp"] = offset ) * 100 / ( rangeTemp) ) where 100 ~ max calculated space available for padding 
+                    //  padding = ( ( highTemp - forecast_row[i]["avgTemp"] = offset ) * 100 / ( rangeTemp) ) where 100 ~ max calculated space available for padding
                     output_html += parseInt((highTemp - forecast_row[i]["avgTemp"] + offset) * 100 / (rangeTemp)) + 'px">';
                     output_html += '<div class="forecast-image">';
                     output_html += '<img id="icon" src="' + forecast_row[i]["image_url"] + '">';
@@ -1311,7 +1311,7 @@ function update_forecast_data(data) {
                     output_html += '</div>';
                     output_html += '<div class="forecast-wind">';
                     output_html += '<i class="wi wi-strong-wind"></i> <span>' + parseFloat(forecast_row[i]["windSpeed"]).toFixed(0) + '</span>';
-                    //  output_html += '<i class="wi wi-strong-wind"></i> <span>'+ parseFloat( forecast_row[i]["windSpeed"] ).toFixed(0) +'</span> | <span> '+ parseFloat( forecast_row[i]["windGust"] ).toFixed(0) +'$unit.label.windSpeed';        
+                    //  output_html += '<i class="wi wi-strong-wind"></i> <span>'+ parseFloat( forecast_row[i]["windSpeed"] ).toFixed(0) +'</span> | <span> '+ parseFloat( forecast_row[i]["windGust"] ).toFixed(0) +'$unit.label.windSpeed';
                     output_html += '</div>';
                     #if $Extras.has_key("forecast_show_daily_forecast_link") and $Extras.forecast_show_daily_forecast_link == '1'
                     output_html += forecast_row[i]["forecast_link"];
@@ -1381,13 +1381,13 @@ function update_forecast_data(data) {
         }
 
 //	End of new composite version of forecast code
-    
+
     #if $Extras.has_key("forecast_alert_enabled") and $Extras.forecast_alert_enabled == '1'
         // Show weather alert
         show_forcast_alert(data, forecast_provider);
     #end if
 
-    // WX icon in temperature box    
+    // WX icon in temperature box
     jQuery("#wxicon").attr("src", wxicon);
     }
 }
@@ -1622,7 +1622,7 @@ function update_current_wx(data) {
         refreshHooks();
     } catch (e) {
     }
-    
+
     #if $Extras.has_key('googleAnalyticsId')
     // Send a pageview
     gtag('config', '$Extras.googleAnalyticsId');
@@ -1633,7 +1633,7 @@ function update_current_wx(data) {
             // Delays are recommended to allow the other skins to complete processing
             belchertown_debug("MQTT: MQTT message indicates this is an archive interval.");
             if (pageName != "pi") {
-                setTimeout(showChart, 30000, homepage_graphgroup); // Load updated charts. 
+                setTimeout(showChart, 30000, homepage_graphgroup); // Load updated charts.
             }
             ajaxweewx().then(function(weewx_data) { // This call will make sure json/weewx_data.json is loaded before anything else
                 setTimeout(update_weewx_data.bind(null, weewx_data), 10000); // Initial call to update (date, daily high, low, etc)
@@ -1679,10 +1679,10 @@ function update_current_wx(data) {
                 localeStringUseGrouping = true;
             }
 
-            mqttdata_observation_found = false;		
+            mqttdata_observation_found = false;
             if (thisElementClass !== mqttdata) { // Find the observation in payload
                 if ((underscore_pos = mqttdata.indexOf('_')) > -1) { // Check if mqttdata contains underscore(s)
-                    if (thisElementClass === mqttdata.slice(0, underscore_pos)) mqttdata_observation_found = true; // Observation should be ok									
+                    if (thisElementClass === mqttdata.slice(0, underscore_pos)) mqttdata_observation_found = true; // Observation should be ok
                     else { // Figure out observations and units with underscore(s)
                         mqttdata_obs_name = mqttdata.slice(0, thisElementClass.length); // Split mqttdata based on length requested observation
                         mqttdata_obs_unit = mqttdata.slice(thisElementClass.length + 1);
@@ -2222,8 +2222,8 @@ function showChart(json_file, prepend_renderTo = false) {
             });
 
             /* yAxis customization handler and label handling
-            Take the following example. 
-            yAxis is in observation 0 (rainTotal), so that label is caught and set by yAxis1_active. 
+            Take the following example.
+            yAxis is in observation 0 (rainTotal), so that label is caught and set by yAxis1_active.
             If you move yAxis to observation 1 (rainRate), then the label is caught and set by yAxis_index.
             There may be a more efficient way to do this. If so, please submit a pull request :)
             [[[chart3]]]
@@ -2283,7 +2283,7 @@ function showChart(json_file, prepend_renderTo = false) {
                 options.yAxis[this_yAxis].softMin = s.yAxis_softMin !== "undefined" ? parseInt(s.yAxis_softMin) : null;
                 options.yAxis[this_yAxis].softMax = s.yAxis_softMax !== "undefined" ? parseInt(s.yAxis_softMax) : null;
 
-                // Set the yAxis tick interval. Mostly used for barometer. 
+                // Set the yAxis tick interval. Mostly used for barometer.
                 if (s.yAxis_tickInterval) {
                     options.yAxis[this_yAxis].tickInterval = s.yAxis_tickInterval;
                 }
@@ -2391,7 +2391,7 @@ function showChart(json_file, prepend_renderTo = false) {
                 options.tooltip.useHTML = true;
 
                 // Since wind rose is a special observation, I did not re-do the JSON arrays to accomodate it as a separate array.
-                // So we need to grab the data array within the series and save it to a temporary array, delete the entire chart series, 
+                // So we need to grab the data array within the series and save it to a temporary array, delete the entire chart series,
                 // and reapply the windrose data back to the series.
                 var newSeries = options.series[0].data;
                 options.series = [];
@@ -2634,7 +2634,7 @@ function showChart(json_file, prepend_renderTo = false) {
                 var range_min = Math.min(...minimum_flattened);
                 var range_max = Math.max(...maximum_flattened);
 
-                var yAxis_tickInterval = Math.ceil(Math.round(range_max / 5) / 5) * 5; // Divide max outTemp by 5 and round it, then round that value up to the nearest 5th multiple. This gives clean yAxis tick lines. 
+                var yAxis_tickInterval = Math.ceil(Math.round(range_max / 5) / 5) * 5; // Divide max outTemp by 5 and round it, then round that value up to the nearest 5th multiple. This gives clean yAxis tick lines.
 
                 options.yAxis = {
                     showFirstLabel: true,
