@@ -1772,8 +1772,24 @@ function update_current_wx(data) {
             } else {
                 localeStringUseGrouping = true;
             }
-            // If this MQTT payload key begins with the name of the span class name, update the info. Can also use mqttdata.includes(thisElementClass) if weewx-mqtt changes in future
-            if (mqttdata.startsWith(thisElementClass)) {
+
+            mqttdata_observation_found = false;		
+            if (thisElementClass !== mqttdata) { // Find the observation in payload
+                if ((underscore_pos = mqttdata.indexOf('_')) > -1) { // Check if mqttdata contains underscore(s)
+                    if (thisElementClass === mqttdata.slice(0, underscore_pos)) mqttdata_observation_found = true; // Observation should be ok									
+                    else { // Figure out observations and units with underscore(s)
+                        mqttdata_obs_name = mqttdata.slice(0, thisElementClass.length); // Split mqttdata based on length requested observation
+                        mqttdata_obs_unit = mqttdata.slice(thisElementClass.length + 1);
+                        if (thisElementClass === mqttdata_obs_name) { // Assume observation is right, check for unit
+                            if (mqttdata_obs_name.startsWith("lightning")) mqttdata_observation_found = true; // Support lightning observations
+                            else if (mqttdata_obs_unit === "microgram_per_meter_cubed") mqttdata_observation_found = true; // Support pm observations
+                            else if (mqttdata_obs_unit === "aqi") mqttdata_observation_found = true; // Support weewx-airlink
+                        }
+                    }
+                }
+            } else mqttdata_observation_found = true; // Names are equal
+
+            if (mqttdata_observation_found) {
                 html_output = parseFloat(parseFloat(data[mqttdata])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array[thisElementClass], maximumFractionDigits: unit_rounding_array[thisElementClass], useGrouping: localeStringUseGrouping}) + unit_label_array[thisElementClass];
 
                 // Finally update the element class
