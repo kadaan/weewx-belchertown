@@ -30,6 +30,7 @@
     #set $minutes = $seconds // 60
     #set $seconds %= 60
     #set $daylight_str = "%d %s, %d %s, %d %s" % ($hours, $obs.label.hour[0] if ( $hours == 1 ) else $obs.label.hour[1], $minutes, $obs.label.minute[0] if ( $minutes == 1 ) else $obs.label.minute[1], $seconds, $obs.label.second[0] if ( $seconds == 1 ) else $obs.label.second[1])
+    #set $daylight_short_str = "%d%s %d%s %d%s" % ($hours, $obs.label.hour_short[0], $minutes, $obs.label.minute_short[0], $seconds, $obs.label.second_short[0])
     #set $yesterday = $now - 24*3600
     #set $yesterday_daylight = $almanac($almanac_time=$yesterday).sun.set.raw - $almanac($almanac_time=$yesterday).sun.rise.raw
     #set $difference = $today_daylight - $yesterday_daylight
@@ -39,15 +40,19 @@
       #set $minutes_text = $obs.label.minute[0] if ( $minute_difference == 1 ) else $obs.label.minute[1]
       #set $seconds_text = $obs.label.second[0] if ( int($delta) == 1 ) else $obs.label.second[1]
       #set $amt_str = "%s%d %s" % (str(int($delta) // 60) + ' ' + $minutes_text + ', ' if ($delta // 60) > 0 else '', $delta % 60 if ($delta // 60) > 0 else $delta, $seconds_text)
+      #set $amt_short_str = "%s%d%s" % (str(int($delta) // 60) + $obs.label.minute_short[0] + ' ' if ($delta // 60) > 0 else '', $delta % 60 if ($delta // 60) > 0 else $delta, $obs.label.second_short[0])
       #if $difference > 0
         #set $delta_str = "%s %s" % ( $amt_str, $obs.label.more_than_yesterday )
+        #set $delta_short_str = "%s %s" % ( $amt_short_str, $obs.label.more_than_yesterday )
       #else
         #set $delta_str = "%s %s" % ( $amt_str, $obs.label.less_than_yesterday )
+        #set $delta_short_str = "%s %s" % ( $amt_short_str, $obs.label.less_than_yesterday )
       #end if
       #set $daylight_str = "%s<br/>%s" % ($daylight_str, $delta_str)
+      #set $daylight_short_str = "%s<br/>%s" % ($daylight_short_str, $delta_short_str)
     #end if
   #end if
-  #set $sun_altitude = locale.format_string( "%.1f&deg;", $almanac.sun.alt )  
+  #set $sun_altitude = locale.format_string( "%.1f&deg;", $almanac.sun.alt )
 #end if
 {
     "site": "$station.location",
@@ -138,7 +143,7 @@
         #end if
         #if $day.ET.has_data and $day.ET.sum.raw > 0.0
         "et": "$current.ET",
-        #end if    
+        #end if
         "rainRate": "$current.rainRate",
         "rain": "$current.rain"
     },
@@ -149,7 +154,7 @@
             "min": "$day.outTemp.min",
             "mintime": "$day.outTemp.mintime"
         },
-        #if $day.appTemp.has_data        
+        #if $day.appTemp.has_data
         "appTemp": {
             "max": "$day.appTemp.max",
             "maxtime": "$day.appTemp.maxtime",
@@ -220,7 +225,7 @@
             "maxtime": "$day.rainRate.maxtime"
         }
     },
-    
+
     "week": {
         "outTemp": {
             "max": "$week.outTemp.max",
@@ -297,9 +302,9 @@
             "sum": "$week.rain.sum",
             "max": "$week.rainRate.max",
             "maxtime": "$week.rainRate.maxtime"
-        } 
+        }
     },
-    
+
     "month": {
         "outTemp": {
             "max": "$month.outTemp.max",
@@ -378,7 +383,7 @@
             "maxtime": "$month.rainRate.maxtime"
         }
     },
-    
+
     "year": {
         "outTemp": {
             "max": "$year.outTemp.max",
@@ -463,7 +468,7 @@
         #if $almanac.sunrise.raw is not None
         "sunrise_hour": "#echo datetime.datetime.fromtimestamp($almanac.sunrise.raw).strftime('%H')#",
         "sunrise_minute": "#echo datetime.datetime.fromtimestamp($almanac.sunrise.raw).strftime('%M')#",
-        #else 
+        #else
         "sunrise_hour": "0",
         "sunrise_minute": "0",
         #end if
@@ -477,6 +482,7 @@
         "sunset_minute": "0",
         #end if
         #if $almanac.hasExtras
+        "daylight_html": "$obs.label.total_daylight: $daylight_short_str",
         "almanac_extras_modal_html": "<div id='celestial_widget' class='widget'> <div class='widget_contents'> <div id='celestial_details'> <div class='celestial_body'> <table class='celestial'> <tr><th>&#9728; $obs.label.sun</th><th></th></tr> <tr> <td class='label'>$obs.label.start_civil_twilight</td> <td class='data'>$almanac(horizon=-6).sun(use_center=1).rise</td> </tr> <tr> <td class='label'>$obs.label.rise</td> <td class='data'>$almanac.sun.rise.format(None_string=$sun_None)</td> </tr> <tr> <td class='label'>$obs.label.transit</td> <td class='data'>$almanac.sun.transit</td> </tr> <tr> <td class='label'>$obs.label.set</td> <td class='data'>$almanac.sun.set.format(None_string=$sun_None)</td> </tr> <tr> <td class='label'>$obs.label.end_civil_twilight</td> <td class='data'>$almanac(horizon=-6).sun(use_center=1).set</td> </tr> <tr> <td class='label'>$obs.label.azimuth</td> <td class='data'>$sun_azimuth</td> </tr> <tr> <td class='label'>$obs.label.altitude</td> <td class='data'>$sun_altitude</td> </tr> <tr> <td class='label'>$obs.label.right_ascension</td> <td class='data'>$sun_ra</td> </tr> <tr> <td class='label'>$obs.label.declination</td> <td class='data'>$sun_dec</td> </tr>#slurp
         #if $almanac.next_equinox.raw < $almanac.next_solstice.raw
         ## The equinox is before the solstice. Display them in order.
