@@ -1876,9 +1876,9 @@ p.entry-meta {
 }
 
 .almanac-link {
-  padding-left: 0px;
-  padding-right: 0px;
-  padding-top: 5px;
+  padding-left: 0px !important;
+  padding-right: 0px !important;
+  padding-top: 5px !important;
 }
 
 /* Flip the weather icons for southern hemisphere */
