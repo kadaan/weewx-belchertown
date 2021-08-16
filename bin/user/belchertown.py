@@ -94,14 +94,6 @@ else:
 VERSION = "1.3b1"
 loginf("version %s" % VERSION)
 
-# Define these as global so they can be used in both the search list extension
-# and custom graphs section
-aqi = ""
-aqi_category = ""
-aqi_time = 0
-aqi_location = ""
-
-
 class getData(SearchList):
     """
     Collect all custom data and calculations, then return search list extension
@@ -238,11 +230,6 @@ class getData(SearchList):
         """
         Build the data needed for the Belchertown skin
         """
-
-        global aqi
-        global aqi_category
-        global aqi_time
-        global aqi_location
 
         # Look for the debug flag which can be used to show more logging
         weewx.debug = int(self.generator.config_dict.get("debug", 0))
@@ -1173,10 +1160,6 @@ class getData(SearchList):
                 "https://api.aerisapi.com/forecasts/%s,%s?&format=json&filter=1hr&limit=16&client_id=%s&client_secret=%s"
                 % (latitude, longitude, forecast_api_id, forecast_api_secret)
             )
-            aqi_url = (
-                "https://api.aerisapi.com/airquality/closest?p=%s,%s&format=json&radius=50mi&limit=1&client_id=%s&client_secret=%s"
-                % (latitude, longitude, forecast_api_id, forecast_api_secret)
-            )
             if self.generator.skin_dict["Extras"]["forecast_alert_limit"]:
                 forecast_alert_limit = self.generator.skin_dict["Extras"][
                     "forecast_alert_limit"
@@ -1259,11 +1242,6 @@ class getData(SearchList):
                         response = urlopen(req)
                         forecast_1hr_page = response.read()
                         response.close()
-                        # AQI
-                        req = Request(aqi_url, None, headers)
-                        response = urlopen(req)
-                        aqi_page = response.read()
-                        response.close()
                         if (
                             self.generator.skin_dict["Extras"]["forecast_alert_enabled"]
                             == "1"
@@ -1290,7 +1268,6 @@ class getData(SearchList):
                                         "forecast_3hr": [json.loads(forecast_3hr_page)],
                                         "forecast_1hr": [json.loads(forecast_1hr_page)],
                                         "alerts": [json.loads(alerts_page)],
-                                        "aqi": [json.loads(aqi_page)],
                                     }
                                 )
                             except:
@@ -1318,7 +1295,6 @@ class getData(SearchList):
                                         "alerts": [
                                             json.loads(alerts_page.decode("utf-8"))
                                         ],
-                                        "aqi": [json.loads(aqi_page.decode("utf-8"))],
                                     }
                                 )
                         else:
@@ -1332,7 +1308,6 @@ class getData(SearchList):
                                         ],
                                         "forecast_3hr": [json.loads(forecast_3hr_page)],
                                         "forecast_1hr": [json.loads(forecast_1hr_page)],
-                                        "aqi": [json.loads(aqi_page)],
                                     }
                                 )
                             except:
@@ -1357,7 +1332,6 @@ class getData(SearchList):
                                                 forecast_1hr_page.decode("utf-8")
                                             )
                                         ],
-                                        "aqi": [json.loads(aqi_page.decode("utf-8"))],
                                     }
                                 )
                 except Exception as error:
@@ -1394,47 +1368,6 @@ class getData(SearchList):
             except Exception:
                 loginf("No cloud cover data from Aeris weather")
                 cloud_cover = ""
-
-            try:
-                if (
-                    len(data["aqi"][0]["response"]) > 0
-                ):
-                    aqi = data["aqi"][0]["response"][0]["periods"][0]["aqi"]
-                    aqi_category = data["aqi"][0]["response"][0]["periods"][0]["category"]
-                    aqi_time = data["aqi"][0]["response"][0]["periods"][0]["timestamp"]
-                    aqi_location = data["aqi"][0]["response"][0]["place"]["name"].title()
-                elif (
-                    data["aqi"][0]["error"]["code"] == "warn_no_data"
-                ):
-                    aqi = "No Data"
-                    aqi_category = ""
-                    aqi_time = 0
-                    aqi_location = ""
-            except Exception as error:
-                logerr(
-                    "Error getting AQI from Aeris weather. The error was: %s" % (error)
-                )
-                aqi = ""
-                aqi_category = ""
-                aqi_time = 0
-                aqi_location = ""
-                pass
-
-            # https://www.aerisweather.com/support/docs/api/reference/endpoints/airquality/
-            if aqi_category == "good":
-                aqi_category = label_dict["aqi_good"]
-            elif aqi_category == "moderate":
-                aqi_category = label_dict["aqi_moderate"]
-            elif aqi_category == "usg":
-                aqi_category = label_dict["aqi_usg"]
-            elif aqi_category == "unhealthy":
-                aqi_category = label_dict["aqi_unhealthy"]
-            elif aqi_category == "very unhealthy":
-                aqi_category = label_dict["aqi_very_unhealthy"]
-            elif aqi_category == "hazardous":
-                aqi_category = label_dict["aqi_hazardous"]
-            else:
-                aqi_category = label_dict["aqi_unknown"]
 
             if (
                 len(data["current"][0]["response"]) > 0
@@ -1549,7 +1482,7 @@ class getData(SearchList):
 
                 earthquake_url = (
                     "https://api.franceseisme.fr/fdsnws/event/1/query?eventtype=earthquake&minmagnitude=2&minlatitude=%.2f&minlongitude=%.2f&maxlatitude=%.2f&maxlongitude=%.2f&format=json&limit=1&orderby=time"
-                    % (minLat, minLong, maxLat, maxLong) 
+                    % (minLat, minLong, maxLat, maxLong)
                 )
             earthquake_is_stale = False
 
@@ -1822,8 +1755,6 @@ class getData(SearchList):
                 obs_output = ""
             elif obs == "cloud_cover":
                 obs_output = cloud_cover
-            elif obs == "aqi":
-                obs_output = aqi
             else:
                 obs_output = getattr(current, obs)
                 if "?" in str(obs_output):
@@ -2043,9 +1974,6 @@ class getData(SearchList):
             "earthquake_bearing_raw": eqbearing_raw,
             "social_html": social_html,
             "custom_css_exists": custom_css_exists,
-            "aqi": aqi,
-            "aqi_category": aqi_category,
-            "aqi_location": aqi_location,
             "beaufort0": label_dict["beaufort0"],
             "beaufort1": label_dict["beaufort1"],
             "beaufort2": label_dict["beaufort2"],
@@ -3229,10 +3157,6 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
 
             return data
 
-        if observation == "aqiChart":
-            data = {"aqiChart": True, "obsdata": [{"y": aqi, "category": aqi_category}]}
-            return data
-
         # Hays chart
         if observation == "haysChart":
 
@@ -3266,7 +3190,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                 )
 
             self.insert_null_value_timestamps_to_end_ts(time_start_vt, time_stop_vt, obs_vt, start_ts, end_ts, aggregate_interval)
-            
+
             min_obs_vt = self.converter.convert(obs_vt)
 
             # Get max values
@@ -3285,7 +3209,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                 )
 
             self.insert_null_value_timestamps_to_end_ts(time_start_vt, time_stop_vt, obs_vt, start_ts, end_ts, aggregate_interval)
-            
+
             max_obs_vt = self.converter.convert(obs_vt)
 
             obs_unit = max_obs_vt[1]
@@ -3359,7 +3283,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
                 order_sql = ' ORDER BY dateTime ASC'
             else:
                 order_sql = ''
-                
+
             # Special case for time_length = all, force to use complete days only
             if time_length == "all":
                 start_ts = startOfDay(archive.firstGoodStamp()) + 86400
@@ -3503,7 +3427,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
             )
 
         self.insert_null_value_timestamps_to_end_ts(time_start_vt, time_stop_vt, obs_vt, start_ts, end_ts, aggregate_interval)
-        
+
         obs_vt = self.converter.convert(obs_vt)
 
         # Special handling for the rain.
@@ -3569,7 +3493,7 @@ class HighchartsJsonGenerator(weewx.reportengine.ReportGenerator):
         """
         In weewx 4.5.1 xtypes.py was modified to not return any data points which didn't exist in the archive database.
         This function adds the 'future' data points from the last timestamp in the list up until end_ts with None entries.
-        This means that graphs still have the option of showing a full day or month or year on the x axis depending on the time_length specfied.       
+        This means that graphs still have the option of showing a full day or month or year on the x axis depending on the time_length specfied.
         """
         count = 0
 

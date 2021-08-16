@@ -1091,16 +1091,23 @@ function show_forcast_alert(data, forecast_provider) {
     }
 }
 
-function aeris_aqi_translate(data) {
-    if (data === "good") data = "$obs.label.aqi_good";
-    else if (data === "moderate") data = "$obs.label.aqi_moderate";
-    else if (data === "usg") data = "$obs.label.aqi_usg";
-    else if (data === "unhealthy") data = "$obs.label.aqi_unhealthy";
-    else if (data === "very unhealthy") data = "$obs.label.aqi_very_unhealthy";
-    else if (data === "hazardous") data = "$obs.label.aqi_hazardous";
-    else data = "$obs.label.aqi_unknown";
-
-    return data;
+function aqi_translate(data) {
+    if (data >= 0 && data <= 50) {
+      var aqi_category = "$obs.label.aqi_good";
+    } else if (data <= 100) {
+      var aqi_category = "$obs.label.aqi_moderate";
+    } else if (data <= 150) {
+      var aqi_category = "$obs.label.aqi_usg";
+    } else if (data <= 200) {
+      var aqi_category = "$obs.label.aqi_unhealthy";
+    } else if (data <= 300) {
+      var aqi_category = "$obs.label.aqi_very_unhealthy";
+    } else if (data === 500) {
+      var aqi_category = "$obs.label.aqi_hazardous";
+    } else {
+      var aqi_category = "$obs.label.aqi_unknown";
+    }
+    jQuery(".wx-aqi-category").html(aqi_category);
 }
 
 function update_forecast_data(data) {
@@ -1120,28 +1127,6 @@ function update_forecast_data(data) {
 
         // Current observation text
         jQuery(".current-obs-text").html(aeris_coded_weather(data["current"][0]["response"]["ob"]["weatherPrimaryCoded"], true));
-
-        // AQI
-        if (data["aqi"][0]["success"] && !data["aqi"][0]["error"]) {
-            jQuery(".wx-aqi").html(data["aqi"][0]["response"][0]["periods"][0]["aqi"]);
-            jQuery(".wx-aqi-category").html(aeris_aqi_translate(data["aqi"][0]["response"][0]["periods"][0]["category"]));
-            if ("$Extras.aqi_location_enabled" === "1") jQuery(".aqi_location_outer").html("<br>" + data["aqi"][0]["response"][0]["place"]["name"]).css('textTransform', 'capitalize');
-            get_aqi_color(data["aqi"][0]["response"][0]["periods"][0]["aqi"]);
-            try {
-                jQuery(".station-observations .aqi").html(data["aqi"][0]["response"][0]["periods"][0]["aqi"]);
-            } catch (err) {
-                // AQI not in the station observation table, so silently exit
-            }
-        } else if (data["aqi"][0]["success"] && data["aqi"][0]["error"]["code"] === "warn_no_data") {
-            jQuery(".wx-aqi").html("No Data");
-            jQuery(".wx-aqi-category").html(aeris_aqi_translate(""));
-            if ("$Extras.aqi_location_enabled" === "1") jQuery(".aqi_location_outer").html("");
-            try {
-                jQuery(".station-observations .aqi").html("No Data");
-            } catch (err) {
-                // AQI not in the station observation table, so silently exit
-            }
-        }
 
         // Visibility text in station observation table
         if (("$Extras.forecast_units" == "si") || ("$Extras.forecast_units" == "ca")) {
@@ -1689,8 +1674,6 @@ function update_current_wx(data) {
                         mqttdata_obs_unit = mqttdata.slice(thisElementClass.length + 1);
                         if (thisElementClass === mqttdata_obs_name) { // Assume observation is right, check for unit
                             if (mqttdata_obs_name.startsWith("lightning")) mqttdata_observation_found = true; // Support lightning observations
-                            else if (mqttdata_obs_unit === "microgram_per_meter_cubed") mqttdata_observation_found = true; // Support pm observations
-                            else if (mqttdata_obs_unit === "aqi") mqttdata_observation_found = true; // Support weewx-airlink
                         }
                     }
                 }
@@ -1807,6 +1790,14 @@ function update_current_wx(data) {
     // Windchill Metric
     if (data.hasOwnProperty("windchill_C")) {
         jQuery(".curwindchill").html(parseFloat(parseFloat(data["windchill_C"])).toLocaleString("$system_locale_js", {minimumFractionDigits: unit_rounding_array["windchill"], maximumFractionDigits: unit_rounding_array["windchill"]}) + "$unit.label.outTemp");
+    }
+
+    // AQI
+    if (data.hasOwnProperty("pm2_5_aqi_aqi")) {
+      var aqi = parseFloat(parseFloat(data["pm2_5_aqi_aqi"])).toLocaleString("en-US", {minimumFractionDigits: 0, maximumFractionDigits: 0});
+      jQuery(".wx-aqi").html(aqi);
+      aqi_translate(aqi);
+      get_aqi_color(aqi);
     }
 };
 #end if
@@ -2471,62 +2462,6 @@ function showChart(json_file, prepend_renderTo = false) {
                 }
                 if (options.series[0].yAxis_min) {
                     options.yAxis.min = options.series[0].yAxis_min;
-                }
-                options.tooltip.enabled = false
-                options.xAxis.crosshair = false
-            }
-
-            // If AQI chart is present, configure a special chart
-            if (observation_type == "aqiChart") {
-                // Highcharts does not allow the guage background to have rounded ends. To get around
-                // this, define a "dummy" series that fills the gauge with the appropriate color.
-                // This way, the ends are rounded if the user specifies.
-                options.series[0].data = [{
-                    y: 500,
-                    color: '#e6e6e6',
-                    className: 'highcharts-pane',
-                    zIndex: 0,
-                    dataLabels: {enabled: false}
-                }, {
-                    y: options.series[0].data[0]['y'],
-                    color: get_aqi_color(options.series[0].data[0]['y'], true),
-                    category: options.series[0].data[0]['category']
-                }]
-                options.chart.type = "solidgauge"
-                options.pane = {
-                    startAngle: -140,
-                    endAngle: 140,
-                    background: [{
-                        outerRadius: 0,
-                        innerRadius: 0,
-                    }]
-                }
-                options.plotOptions = {
-                    solidgauge: {
-                        dataLabels: {
-                            useHTML: true,
-                            enabled: true,
-                            y: -30,
-                            borderWidth: 0,
-                            format: '<span style="text-align:center">{y}</span><br><span style="font-size:14px;text-align:center">' + options.series[0].data[1]['category'] + '</span>',
-                            style: {
-                                fontWeight: 'bold',
-                                lineHeight: '0.5em',
-                                textAlign: 'center',
-                                fontSize: '50px',
-                                color: options.series[0].data[1].color,
-                                textOutline: 'none'
-                            }
-                        },
-                        linecap: 'round',
-                        rounded: true
-                    }
-                }
-                options.yAxis = {
-                    min: 0,
-                    max: 500,
-                    lineColor: null,
-                    tickPositions: []
                 }
                 options.tooltip.enabled = false
                 options.xAxis.crosshair = false

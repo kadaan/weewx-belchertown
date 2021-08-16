@@ -121,8 +121,6 @@ extension_config = """
            # forecast_alert_limit = 1
            # forecast_show_daily_forecast_link = 0
            # forecast_daily_forecast_link = ""
-           # aqi_enabled = 0
-           # aqi_location_enabled = 0
 
            #--- Earthquake Options ---
            # earthquake_enabled = 0
