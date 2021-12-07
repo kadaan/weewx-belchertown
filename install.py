@@ -132,7 +132,6 @@ extension_config = """
            #--- Social Options ---
            # facebook_enabled = 0
            # twitter_enabled = 0
-           # twitter_owner = ""
            # twitter_hashtags = "weewx #weather"
            # social_share_html = ""
            # twitter_text = "Check out my website: My Weather Website Weather Conditions"
@@ -223,6 +222,7 @@ files=[('bin/user', ['bin/user/belchertown.py'
                                      'skins/Belchertown/images/tornado.png',
                                      'skins/Belchertown/images/unknown.png',
                                      'skins/Belchertown/images/wind.png',
+                                     'skins/Belchertown/images/windy.png',
                                      'skins/Belchertown/images/index.html',
                                      'skins/Belchertown/images/aeris-icon-list.json'
                                     ]
